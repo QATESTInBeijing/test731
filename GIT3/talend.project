@@ -7,4 +7,5 @@
   </TalendProperties:Project>
   <TalendProperties:User xmi:id="_lqQRYR8zEeulhb2yN80pmg" login="security@company.com" firstName="security" lastName="security" type="MDM" additionnalData="{}"/>
   <TalendProperties:User xmi:id="_MQbMQB88EeuQu7VT8-uYBA" login="security2@company.com" firstName="security2" lastName="security2" type="MDM" additionnalData="{}"/>
+  <TalendProperties:User xmi:id="_gTiCUB9JEeurQOVT6KKJgQ" login="security3@company.com" firstName="security3" lastName="security3" type="MDM" additionnalData="{}"/>
 </xmi:XMI>
