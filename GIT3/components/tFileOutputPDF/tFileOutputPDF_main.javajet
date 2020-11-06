@@ -1,0 +1,104 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+    	org.talend.core.model.process.ElementParameterParser 
+		org.talend.core.model.metadata.IMetadataTable 
+		org.talend.core.model.metadata.IMetadataColumn
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.process.IConnection
+		org.talend.core.model.process.IConnectionCategory
+		org.talend.core.model.metadata.types.JavaTypesManager
+		org.talend.core.model.metadata.types.JavaType		
+		java.util.List
+		java.util.Map
+	" 
+%>
+<%
+CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+INode node = (INode)codeGenArgument.getArgument();
+String cid = node.getUniqueName();    
+
+List<IMetadataTable> metadatas = node.getMetadataList();
+
+
+if ((metadatas!=null)&&(metadatas.size()>0)) {//1
+    IMetadataTable metadata = metadatas.get(0);
+    if (metadata!=null) {//2
+		List<IMetadataColumn> columns = metadata.getListColumns();
+		int sizeColumns = columns.size();
+		String printHeader = ElementParameterParser.getValue(node,"__PRINT_HEADER__");
+		%>
+		//get the column quantity
+		SizeColumns2_<%=cid%> = <%=sizeColumns %>;
+		String[] row_<%=cid%> = new String[<%=sizeColumns %>];
+		<%
+		if (printHeader.equals("true")) {//begin condition print header
+   			
+    			for (int i = 0; i < sizeColumns; i++) {//loop reading data
+				
+	    			IMetadataColumn column = columns.get(i);
+					JavaType javaType = JavaTypesManager.getJavaTypeFromId(column.getTalendType());
+%>
+				
+				//add each column name to the list
+					listhead_<%=cid%>.add("<%=column.getLabel() %>");
+				
+<%
+														}//end loop reading data	
+
+								}
+		else;
+		
+		
+    	List< ? extends IConnection> conns = node.getIncomingConnections();
+    	for (IConnection conn : conns) {//3
+    		if (conn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) {//4
+			for (int i = 0; i < sizeColumns; i++) {//loop reading data
+    			IMetadataColumn column = columns.get(i);
+				JavaType javaType = JavaTypesManager.getJavaTypeFromId(column.getTalendType());
+				
+%>
+//test the pattern of each data
+
+		row_<%=cid%>[<%=i %>]=    						
+<%
+    				String pattern = column.getPattern() == null || column.getPattern().trim().length() == 0 ? null : column.getPattern();
+    				if (javaType == JavaTypesManager.DATE && pattern != null && pattern.trim().length() != 0) {//Date
+%>
+								FormatterUtils.format_Date(<%=conn.getName() %>.<%=column.getLabel() %>, <%= pattern %>)
+<%				
+					} else if (javaType == JavaTypesManager.BYTE_ARRAY) {//byte[]
+%>
+								java.nio.charset.Charset.defaultCharset().decode(java.nio.ByteBuffer.wrap(<%=conn.getName() %>.<%=column.getLabel() %>)).toString()
+<%
+					} else if (javaType == JavaTypesManager.BIGDECIMAL) {
+%>
+								String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>.doubleValue())
+<%
+					} else {//others
+%>    
+				                String.valueOf(<%=conn.getName() %>.<%=column.getLabel() %>)			
+<%				
+					}
+%>
+					          ;	
+
+//Add the data to the dataList
+
+					listdata_<%=cid%>.add(row_<%=cid%>[<%=i %>]);
+
+<%
+				
+				
+				}
+			
+			
+			}//4
+		}//3
+	}//2
+}//1
+
+
+
+
+%>

@@ -1,0 +1,166 @@
+<%@ jet
+imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.metadata.IMetadataTable 
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.process.ElementParameterParser 
+		java.util.List
+		"
+%>
+
+<%
+CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+INode node = (INode)codeGenArgument.getArgument();
+String cid = node.getUniqueName();
+ 
+%>
+
+//create the int Array that will get the columns size
+String printHeader_<%=cid%> ="<%=ElementParameterParser.getValue(node,"__PRINT_HEADER__")%>";
+String printalternaterow_<%=cid%> ="<%=ElementParameterParser.getValue(node,"__ALTERNATE_ROW__")%>";
+
+int[] colLengths_<%=cid%> = new int[SizeColumns2_<%=cid%>];//array of length
+float[] abscolLengths_<%=cid%> = new float[SizeColumns2_<%=cid%>];//array of length
+int num_<%=cid%>=0;//indice
+int totalsize_<%=cid%>=0;//sum of every max column size
+int numrow_<%=cid%>=(listdata_<%=cid%>.size()/SizeColumns2_<%=cid%>);//row quantity
+
+//we add to the colLengths array the length of each headers, if the user decide to print the headers
+
+if(printHeader_<%=cid%>.equals("true")){
+	for(int o =0;o<SizeColumns2_<%=cid%>;o++){
+
+                  colLengths_<%=cid%>[o] = Math.max(colLengths_<%=cid%>[o], listhead_<%=cid%>.get(o).length());
+
+	}
+}
+else;
+
+
+//we test each value of the lengths to check if it's the biggest one
+for(int n=0; n<listdata_<%=cid%>.size();n++){
+
+
+		num_<%=cid%> = (n%SizeColumns2_<%=cid%>);
+		colLengths_<%=cid%>[num_<%=cid%>]=Math.max(colLengths_<%=cid%>[num_<%=cid%>],listdata_<%=cid%>.get(n).length());
+
+}
+
+//we calculate the total size to know the ratio of each column
+for(int ind=0;ind<SizeColumns2_<%=cid%>;ind++){
+
+totalsize_<%=cid%>+=colLengths_<%=cid%>[ind];
+
+}
+//we calculate the precentage of each column size and we store them into a float array
+for(int indi=0;indi<SizeColumns2_<%=cid%>;indi++){
+
+abscolLengths_<%=cid%>[indi]=(float)colLengths_<%=cid%>[indi]/totalsize_<%=cid%>;
+
+}
+
+
+
+
+try {
+	
+	//create the pdf file and configure its format
+			com.lowagie.text.Document document = new com.lowagie.text.Document(<%=ElementParameterParser.getValue(node,"__PAGE_ORIENTATION__")%>, 10, 10, 10, 10);
+			com.lowagie.text.pdf.PdfWriter writer = com.lowagie.text.pdf.PdfWriter.getInstance(document,new java.io.FileOutputStream(<%=ElementParameterParser.getValue(node,"__GENERATED_FILE_PATH__")%>));
+			document.open();
+	
+
+	//create the title field
+			com.lowagie.text.Paragraph title1 = new com.lowagie.text.Paragraph(<%=ElementParameterParser.getValue(node,"__FILE_TITLE__")%>, com.lowagie.text.FontFactory.getFont(
+					<%=ElementParameterParser.getValue(node,"__FONT_TITLE__")%>,
+					<%=ElementParameterParser.getValue(node,"__SIZE_FONT_TITLE__")%>,
+					<%=ElementParameterParser.getValue(node,"__FONT_TITLE_STYLE__")%>,
+					new java.awt.Color(<%=ElementParameterParser.getValue(node,"__TITLE_FONT_COLOR_R__")%>,
+					<%=ElementParameterParser.getValue(node,"__TITLE_FONT_COLOR_G__")%>,
+					<%=ElementParameterParser.getValue(node,"__TITLE_FONT_COLOR_B__")%>)));
+	//set the title at the center of the document
+	
+			title1.setAlignment(com.lowagie.text.Element.ALIGN_CENTER);
+			com.lowagie.text.Chapter chapter1 = new com.lowagie.text.Chapter(title1, 1);
+			chapter1.setNumberDepth(0);
+
+			com.lowagie.text.Paragraph title12 = new com.lowagie.text.Paragraph();
+			com.lowagie.text.Section section2 = chapter1.addSection(title12);
+			section2.setNumberDepth(0);
+
+			//we use the float array of column size to define the size of our table
+			com.lowagie.text.pdf.PdfPTable t = new com.lowagie.text.pdf.PdfPTable(abscolLengths_<%=cid%>);
+			
+			//the space before the table
+			t.setSpacingBefore(50);
+			
+			com.lowagie.text.pdf.PdfPCell cell;
+			
+			//first, we add the header to the table 
+			if(printHeader_<%=cid%>.equals("true")){
+			for(int m=0;m<SizeColumns2_<%=cid%>;m++){
+			
+			cell = new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Phrase(listhead_<%=cid%>.get(m)
+			,com.lowagie.text.FontFactory.getFont(
+			<%=ElementParameterParser.getValue(node,"__FONT_HEADER__")%>
+			,<%=ElementParameterParser.getValue(node,"__SIZE_FONT_HEADER__")%>
+			, <%=ElementParameterParser.getValue(node,"__FONT_HEADER_STYLE__")%>,
+			new java.awt.Color(<%=ElementParameterParser.getValue(node,"__FONT_HEADER_COLOR_R__")%>,
+			<%=ElementParameterParser.getValue(node,"__FONT_HEADER_COLOR_G__")%>,
+			<%=ElementParameterParser.getValue(node,"__FONT_HEADER_COLOR_B__")%>))));
+			cell.setBorderColor(new java.awt.Color(<%=ElementParameterParser.getValue(node,"__BORDER_COLOR_R__")%>,
+			<%=ElementParameterParser.getValue(node,"__BORDER_COLOR_G__")%>,
+			<%=ElementParameterParser.getValue(node,"__BORDER_COLOR_B__")%>));
+			cell.setPaddingBottom(10);
+			t.addCell(cell);
+					
+			}
+			}
+			else;
+			
+			
+			int indrow=0;//the row indice
+			
+			//we add all the data to the table
+			for(int k=0;k<listdata_<%=cid%>.size();k++){
+			
+			cell = new com.lowagie.text.pdf.PdfPCell(new com.lowagie.text.Phrase(listdata_<%=cid%>.get(k)
+			,com.lowagie.text.FontFactory.getFont(
+			<%=ElementParameterParser.getValue(node,"__FONT_BODY__")%>
+			,<%=ElementParameterParser.getValue(node,"__SIZE_FONT_BODY__")%>
+			, <%=ElementParameterParser.getValue(node,"__FONT_BODY_STYLE__")%>,
+			new java.awt.Color(<%=ElementParameterParser.getValue(node,"__FONT_BODY_COLOR_R__")%>,
+			<%=ElementParameterParser.getValue(node,"__FONT_BODY_COLOR_G__")%>,
+			<%=ElementParameterParser.getValue(node,"__FONT_BODY_COLOR_B__")%>))));
+			
+			//if the user decide to print alternate grey row
+			if(printalternaterow_<%=cid%>.equals("true")){
+			if((k)%SizeColumns2_<%=cid%>==0){
+			indrow++;
+			}
+			else;
+			if(indrow%2 ==1){
+			cell.setBackgroundColor(new java.awt.Color(150,150,150));
+			}
+			else;
+			}
+			else;
+			
+			cell.setBorderColor(new java.awt.Color(<%=ElementParameterParser.getValue(node,"__BORDER_COLOR_R__")%>,
+			<%=ElementParameterParser.getValue(node,"__BORDER_COLOR_G__")%>,
+			<%=ElementParameterParser.getValue(node,"__BORDER_COLOR_B__")%>));
+
+			t.addCell(cell);
+						
+			}
+		//we define the first row as the header one
+		t.setHeaderRows(1);
+		section2.add(t);
+			
+		document.add(chapter1);
+		
+		document.close();
+		
+		} catch (Exception e2) {
+			System.out.println(e2.getMessage());
+		}
